@@ -22,11 +22,19 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Download Gradle wrapper
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/gradle
+          export GRADLE_HOME=/tmp/gradle/gradle-8.7
+          export PATH=$PATH:$GRADLE_HOME/bin
+          echo "GRADLE_HOME=$GRADLE_HOME" >> $GITHUB_ENV
+          echo "$GRADLE_HOME/bin" >> $GITHUB_PATH
 
       - name: Build Debug APK
-        run: bash gradlew assembleDebug
+        run: gradle assembleDebug
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
