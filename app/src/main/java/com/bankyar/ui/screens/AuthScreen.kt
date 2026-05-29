@@ -1,0 +1,197 @@
+package com.bankyar.ui.screens
+
+import androidx.compose.animation.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.bankyar.ui.theme.*
+import com.bankyar.ui.viewmodels.AuthViewModel
+
+@Composable
+fun AuthScreen(viewModel: AuthViewModel, onAuthenticated: () -> Unit) {
+    val state by viewModel.state.collectAsState()
+    var isLogin by remember { mutableStateOf(true) }
+    var name by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var pin by remember { mutableStateOf("") }
+    var pinVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.success) {
+        if (state.success) onAuthenticated()
+    }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(GradientStart, GradientEnd, Color(0xFF0A2472))))
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(48.dp))
+
+            // Logo
+            Box(
+                Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.AccountBalance, null, tint = Color.White, modifier = Modifier.size(44.dp))
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Text("بانک‌یار", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("مدیریت هوشمند حساب‌های بانکی", fontSize = 14.sp, color = Color.White.copy(0.8f))
+
+            Spacer(Modifier.height(40.dp))
+
+            // Card
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Surface),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(Modifier.padding(24.dp)) {
+                    // Tab
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(SurfaceVariant),
+                    ) {
+                        listOf("ورود" to true, "ثبت‌نام" to false).forEach { (label, isLoginTab) ->
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isLogin == isLoginTab) Primary else Color.Transparent)
+                                    .clickable { isLogin = isLoginTab; viewModel.clearError() }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    label,
+                                    color = if (isLogin == isLoginTab) Color.White else TextSecondary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+
+                    AnimatedVisibility(!isLogin, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                        Column {
+                            AuthField("نام و نام خانوادگی", name, { name = it }, Icons.Default.Person)
+                            Spacer(Modifier.height(12.dp))
+                        }
+                    }
+
+                    AuthField("شماره موبایل", phone, { phone = it }, Icons.Default.Phone,
+                        keyboardType = KeyboardType.Phone)
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = pin,
+                        onValueChange = { if (it.length <= 8) pin = it },
+                        label = { Text("رمز عبور") },
+                        leadingIcon = { Icon(Icons.Default.Lock, null, tint = Primary) },
+                        trailingIcon = {
+                            IconButton({ pinVisible = !pinVisible }) {
+                                Icon(if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = TextSecondary)
+                            }
+                        },
+                        visualTransformation = if (pinVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Primary,
+                            unfocusedBorderColor = TextHint
+                        )
+                    )
+
+                    // Error
+                    state.error?.let { err ->
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(ExpenseRedLight)
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Error, null, tint = ExpenseRed, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(err, color = ExpenseRed, fontSize = 13.sp)
+                        }
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    Button(
+                        onClick = {
+                            if (isLogin) viewModel.login(phone, pin)
+                            else viewModel.register(name, phone, pin)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                        enabled = !state.isLoading
+                    ) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text(if (isLogin) "ورود به حساب" else "ایجاد حساب", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun AuthField(
+    label: String, value: String, onValueChange: (String) -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        leadingIcon = { Icon(icon, null, tint = Primary) },
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Primary,
+            unfocusedBorderColor = TextHint
+        )
+    )
+}
