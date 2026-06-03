@@ -12,23 +12,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.bankyar.ui.theme.*
+import com.bankyar.ui.theme.GradientEnd
+import com.bankyar.ui.theme.GradientStart
 import java.text.DecimalFormat
 
-fun formatAmount(amount: Double): String {
-    val df = DecimalFormat("#,###")
-    return df.format(amount)
-}
+fun formatAmount(amount: Double): String = DecimalFormat("#,###").format(amount)
 
 @Composable
-fun GradientCard(
-    modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit
-) {
+fun GradientCard(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+        modifier = modifier.clip(RoundedCornerShape(20.dp))
             .background(Brush.linearGradient(listOf(GradientStart, GradientEnd)))
             .padding(20.dp),
         content = content
@@ -37,40 +30,13 @@ fun GradientCard(
 
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = TextPrimary,
-        modifier = modifier
-    )
-}
-
-@Composable
-fun AmountText(
-    amount: Double,
-    type: com.bankyar.data.database.entities.TransactionType,
-    fontSize: androidx.compose.ui.unit.TextUnit = 16.sp
-) {
-    val (color, prefix) = when (type) {
-        com.bankyar.data.database.entities.TransactionType.INCOME -> IncomeGreen to "+"
-        com.bankyar.data.database.entities.TransactionType.EXPENSE -> ExpenseRed to "-"
-        com.bankyar.data.database.entities.TransactionType.TRANSFER -> TransferBlue to ""
-    }
-    Text(
-        text = "$prefix${formatAmount(amount)} تومان",
-        color = color,
-        fontSize = fontSize,
-        fontWeight = FontWeight.SemiBold
-    )
+    Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground, modifier = modifier)
 }
 
 @Composable
 fun LoadingOverlay() {
-    Box(
-        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(color = Primary)
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(0.3f)), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }

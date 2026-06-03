@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bankyar.data.database.entities.TransactionType
-import com.bankyar.ui.theme.*
 import com.bankyar.ui.viewmodels.TransactionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,73 +44,79 @@ fun TransactionsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("همه تراکنش‌ها", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onBack) { Icon(Icons.Default.ArrowBack, null) }
-                },
+                navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, null) } },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Primary,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddTransaction, containerColor = Primary, contentColor = Color.White) {
+            FloatingActionButton(onClick = onAddTransaction,
+                containerColor = MaterialTheme.colorScheme.primary, contentColor = Color.White) {
                 Icon(Icons.Default.Add, null)
             }
         }
     ) { padding ->
-        Column(Modifier.fillMaxSize().background(Background).padding(padding)) {
-            // Search
+        Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding)) {
             OutlinedTextField(
-                value = query,
-                onValueChange = viewModel::setSearchQuery,
-                placeholder = { Text("جستجو در تراکنش‌ها...", color = TextHint) },
-                leadingIcon = { Icon(Icons.Default.Search, null, tint = TextSecondary) },
+                value = query, onValueChange = viewModel::setSearchQuery,
+                placeholder = { Text("جستجو در تراکنش‌ها...", color = MaterialTheme.colorScheme.outline) },
+                leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 trailingIcon = {
                     if (query.isNotBlank()) IconButton({ viewModel.setSearchQuery("") }) {
-                        Icon(Icons.Default.Clear, null, tint = TextSecondary)
+                        Icon(Icons.Default.Clear, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Surface,
-                    unfocusedContainerColor = Surface,
-                    focusedBorderColor = Primary,
-                    unfocusedBorderColor = Color.Transparent
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 singleLine = true
             )
 
-            // Filter chips
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(null, "همه", filterType, { filterType = it })
-                FilterChip(TransactionType.INCOME, "درآمد", filterType, { filterType = it })
-                FilterChip(TransactionType.EXPENSE, "هزینه", filterType, { filterType = it })
-                FilterChip(TransactionType.TRANSFER, "انتقال", filterType, { filterType = it })
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(null to "همه", TransactionType.INCOME to "درآمد",
+                    TransactionType.EXPENSE to "هزینه", TransactionType.TRANSFER to "انتقال"
+                ).forEach { (type, label) ->
+                    val isSelected = filterType == type
+                    val (bg, fg) = when {
+                        !isSelected -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+                        type == TransactionType.INCOME -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+                        type == TransactionType.EXPENSE -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+                        type == TransactionType.TRANSFER -> Color(0xFFE3F2FD) to Color(0xFF1565C0)
+                        else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.primary
+                    }
+                    Box(
+                        Modifier.clip(RoundedCornerShape(20.dp)).background(bg)
+                            .clickable { filterType = type }.padding(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Text(label, color = fg, fontSize = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal)
+                    }
+                }
             }
 
             Spacer(Modifier.height(8.dp))
-
-            // Count
-            Text(
-                "${filtered.size} تراکنش",
-                color = TextSecondary,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
-            Spacer(Modifier.height(8.dp))
+            Text("${filtered.size} تراکنش", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp, modifier = Modifier.padding(horizontal = 20.dp))
+            Spacer(Modifier.height(4.dp))
 
             if (filtered.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.SearchOff, null, tint = TextHint, modifier = Modifier.size(56.dp))
+                        Icon(Icons.Default.SearchOff, null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(56.dp))
                         Spacer(Modifier.height(8.dp))
-                        Text("نتیجه‌ای یافت نشد", color = TextSecondary)
+                        Text("نتیجه‌ای یافت نشد", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             } else {
@@ -122,31 +127,5 @@ fun TransactionsScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun FilterChip(
-    type: TransactionType?,
-    label: String,
-    selected: TransactionType?,
-    onClick: (TransactionType?) -> Unit
-) {
-    val isSelected = selected == type
-    val (bg, fg) = when {
-        !isSelected -> SurfaceVariant to TextSecondary
-        type == TransactionType.INCOME -> IncomeGreenLight to IncomeGreen
-        type == TransactionType.EXPENSE -> ExpenseRedLight to ExpenseRed
-        type == TransactionType.TRANSFER -> TransferBlueLight to TransferBlue
-        else -> Primary.copy(0.15f) to Primary
-    }
-    Box(
-        Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(bg)
-            .clickable { onClick(type) }
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    ) {
-        Text(label, color = fg, fontSize = 13.sp, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal)
     }
 }

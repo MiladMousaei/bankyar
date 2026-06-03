@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bankyar.ui.theme.*
@@ -31,34 +30,23 @@ fun AuthScreen(viewModel: AuthViewModel, onAuthenticated: () -> Unit) {
     var pin by remember { mutableStateOf("") }
     var pinVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.success) {
-        if (state.success) onAuthenticated()
-    }
+    LaunchedEffect(state.success) { if (state.success) onAuthenticated() }
 
     Box(
-        Modifier
-            .fillMaxSize()
+        Modifier.fillMaxSize()
             .background(Brush.verticalGradient(listOf(GradientStart, GradientEnd, Color(0xFF0A2472))))
     ) {
         Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(48.dp))
 
-            // Logo
             Box(
-                Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White.copy(alpha = 0.2f)),
+                Modifier.size(80.dp).clip(RoundedCornerShape(24.dp))
+                    .background(Color.White.copy(0.2f)),
                 contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.AccountBalance, null, tint = Color.White, modifier = Modifier.size(44.dp))
-            }
+            ) { Icon(Icons.Default.AccountBalance, null, tint = Color.White, modifier = Modifier.size(44.dp)) }
 
             Spacer(Modifier.height(16.dp))
             Text("بانک‌یار", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -66,36 +54,28 @@ fun AuthScreen(viewModel: AuthViewModel, onAuthenticated: () -> Unit) {
 
             Spacer(Modifier.height(40.dp))
 
-            // Card
             Card(
-                Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Surface),
+                Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(8.dp)
             ) {
                 Column(Modifier.padding(24.dp)) {
-                    // Tab
+                    // Tabs
                     Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(SurfaceVariant),
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFEEF2FB))
                     ) {
                         listOf("ورود" to true, "ثبت‌نام" to false).forEach { (label, isLoginTab) ->
                             Box(
-                                Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(12.dp))
+                                Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
                                     .background(if (isLogin == isLoginTab) Primary else Color.Transparent)
                                     .clickable { isLogin = isLoginTab; viewModel.clearError() }
                                     .padding(vertical = 12.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    label,
-                                    color = if (isLogin == isLoginTab) Color.White else TextSecondary,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text(label,
+                                    color = if (isLogin == isLoginTab) Color.White else Color(0xFF6B7280),
+                                    fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -104,23 +84,30 @@ fun AuthScreen(viewModel: AuthViewModel, onAuthenticated: () -> Unit) {
 
                     AnimatedVisibility(!isLogin, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         Column {
-                            AuthField("نام و نام خانوادگی", name, { name = it }, Icons.Default.Person)
+                            AuthTextField(
+                                label = "نام و نام خانوادگی", value = name,
+                                onValueChange = { name = it }, icon = Icons.Default.Person
+                            )
                             Spacer(Modifier.height(12.dp))
                         }
                     }
 
-                    AuthField("شماره موبایل", phone, { phone = it }, Icons.Default.Phone,
-                        keyboardType = KeyboardType.Phone)
+                    AuthTextField(
+                        label = "شماره موبایل", value = phone,
+                        onValueChange = { phone = it }, icon = Icons.Default.Phone,
+                        keyboardType = KeyboardType.Phone
+                    )
                     Spacer(Modifier.height(12.dp))
 
                     OutlinedTextField(
                         value = pin,
                         onValueChange = { if (it.length <= 8) pin = it },
-                        label = { Text("رمز عبور") },
+                        label = { Text("رمز عبور", color = Color(0xFF6B7280)) },
                         leadingIcon = { Icon(Icons.Default.Lock, null, tint = Primary) },
                         trailingIcon = {
                             IconButton({ pinVisible = !pinVisible }) {
-                                Icon(if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = TextSecondary)
+                                Icon(if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    null, tint = Color(0xFF6B7280))
                             }
                         },
                         visualTransformation = if (pinVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -129,24 +116,23 @@ fun AuthScreen(viewModel: AuthViewModel, onAuthenticated: () -> Unit) {
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Primary,
-                            unfocusedBorderColor = TextHint
+                            unfocusedBorderColor = Color(0xFF9CA3AF),
+                            focusedTextColor = Color(0xFF1A1A2E),
+                            unfocusedTextColor = Color(0xFF1A1A2E),
+                            cursorColor = Primary,
                         )
                     )
 
-                    // Error
                     state.error?.let { err ->
                         Spacer(Modifier.height(12.dp))
                         Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(ExpenseRedLight)
-                                .padding(10.dp),
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFFFEBEE)).padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Error, null, tint = ExpenseRed, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Error, null, tint = Color(0xFFC62828), modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(err, color = ExpenseRed, fontSize = 13.sp)
+                            Text(err, color = Color(0xFFC62828), fontSize = 13.sp)
                         }
                     }
 
@@ -162,11 +148,11 @@ fun AuthScreen(viewModel: AuthViewModel, onAuthenticated: () -> Unit) {
                         colors = ButtonDefaults.buttonColors(containerColor = Primary),
                         enabled = !state.isLoading
                     ) {
-                        if (state.isLoading) {
+                        if (state.isLoading)
                             CircularProgressIndicator(Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
-                        } else {
-                            Text(if (isLogin) "ورود به حساب" else "ایجاد حساب", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        }
+                        else
+                            Text(if (isLogin) "ورود به حساب" else "ایجاد حساب",
+                                fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
                     }
                 }
             }
@@ -176,22 +162,24 @@ fun AuthScreen(viewModel: AuthViewModel, onAuthenticated: () -> Unit) {
 }
 
 @Composable
-private fun AuthField(
+private fun AuthTextField(
     label: String, value: String, onValueChange: (String) -> Unit,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
     OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
+        value = value, onValueChange = onValueChange,
+        label = { Text(label, color = Color(0xFF6B7280)) },
         leadingIcon = { Icon(icon, null, tint = Primary) },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Primary,
-            unfocusedBorderColor = TextHint
+            unfocusedBorderColor = Color(0xFF9CA3AF),
+            focusedTextColor = Color(0xFF1A1A2E),
+            unfocusedTextColor = Color(0xFF1A1A2E),
+            cursorColor = Primary,
         )
     )
 }
